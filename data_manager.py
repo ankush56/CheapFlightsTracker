@@ -12,11 +12,14 @@ class DataManager:
         sheet_inputs = {}
         auth = ()
         data = None
+        endpoint_url = None
         for key, value in kwargs.items():
             if key == 'json':
                 sheet_inputs = value
             if key == 'auth':
                 auth = value
+            if key == 'endpoint':
+                endpoint_url = self.sheet_url + "/" + str(value)
         if action_type == 'GET':
             # Get Sheet data
             response = requests.get(self.sheet_url)
@@ -39,6 +42,15 @@ class DataManager:
                 sheet_response = requests.post(self.sheet_url, json=sheet_inputs, auth=auth)
                 sheet_result = sheet_response.json()
                 print(f"New destination added in google sheet{sheet_result}")
+        elif action_type == 'PUT':
+            print(f"endpoint url is {self.sheet_url}")
+            sheet_response = requests.put(endpoint_url, json=sheet_inputs, auth=auth)
+            sheet_result = sheet_response.json()
+            print(f"Put request executed{sheet_result}")
+            # Reset sheet url
+            endpoint_url = self.sheet_url
+
+
 
 
 

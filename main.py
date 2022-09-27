@@ -26,13 +26,27 @@ sheet_input = {
         'lowestPrice': 12
     }
 }
+
+
+new_data = {
+    'price': {
+        'iataCode': 1234,
+    }
+}
+
 # Add destination to sheet data
 # Check if entry there if not there then only add
-data = sheet1.sheet_action('GET')
-print(f"data is {data}")
-print(f"sheet input is {sheet_input['price']['city']}")
+# data = sheet1.sheet_action('GET')
+# print(f"data is {data}")
+# print(f"sheet input is {sheet_input['price']['city']}")
+#
+# sheet1.sheet_action('POST', json=sheet_input, auth=auth)
 
-sheet1.sheet_action('POST', json=sheet_input, auth=auth )
+#Update all IATA code to testing
+data = sheet1.sheet_action('GET')
+for x in data['prices']:
+    print(f"id is {x['id']}")
+    sheet1.sheet_action('PUT', json=new_data, auth=auth, endpoint=x['id'])
 #
 ### url = "https://api.tequila.kiwi.com/v2/search"
 #
