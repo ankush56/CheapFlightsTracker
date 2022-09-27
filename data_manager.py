@@ -3,6 +3,7 @@ import requests
 
 class DataManager:
     # This class is responsible for talking to the Google Sheet.
+    # Use sheety API
 
     def __init__(self, url):
         self.sheet_url = url
