@@ -6,6 +6,8 @@ import os
 from twilio.rest import Client
 from dotenv import load_dotenv
 from data_manager import DataManager
+from pprint import pprint
+from flight_data import FlightData
 
 load_dotenv()
 
@@ -15,6 +17,8 @@ SHEET_PASSWORD = os.environ.get('SHEET_PASSWORD')
 auth = (SHEET_USERNAME, SHEET_PASSWORD)
 
 sheet1 = DataManager(SHEET_URL)
+flightdata = FlightData()
+
 # Get sheet data
 #
 
@@ -28,11 +32,11 @@ sheet_input = {
 }
 
 
-new_data = {
-    'price': {
-        'iataCode': 1234,
-    }
-}
+# new_data = {
+#     'price': {
+#         'iataCode': 1234,
+#     }
+# }
 
 # Add destination to sheet data
 # Check if entry there if not there then only add
@@ -43,27 +47,51 @@ new_data = {
 # sheet1.sheet_action('POST', json=sheet_input, auth=auth)
 
 #Update all IATA code to testing
+# data = sheet1.sheet_action('GET')
+# for x in data['prices']:
+#     print(f"id is {x['id']}")
+#     sheet1.sheet_action('PUT', json=new_data, auth=auth, endpoint=x['id'])
+
+url = "https://api.tequila.kiwi.com/v2/search"
+API_KEY = os.environ.get('API_KEY')
+
+parameters = {
+    'fly_from':'YYZ',
+    'fly_to': 'YVR',
+    'dateFrom': '01/11/2022',
+    'dateTo': '02/11/2022',
+    'curr': 'CAD'
+}
+
+location_parameters = {
+    'term': '',
+}
+
+headers = {
+    "apikey": API_KEY,
+    "Content-Type": "application/json"
+}
+
+new_data = {
+    'price': {
+        'iataCode': 1234,
+    }
+}
+
 data = sheet1.sheet_action('GET')
 for x in data['prices']:
-    print(f"id is {x['id']}")
+    location_parameters['term'] = x['city']
+    code = flightdata.get_iata_code(location_parameters, headers)
+    new_data['price']['iataCode'] = code
     sheet1.sheet_action('PUT', json=new_data, auth=auth, endpoint=x['id'])
-#
-### url = "https://api.tequila.kiwi.com/v2/search"
-#
-##API_KEY = os.environ.get('API_KEY') parameters = {
-#     'fly_from':'YYZ',
-#     'fly_to': 'YVR',
-#     'dateFrom': '01/11/2022',
-#     'dateTo': '04/11/2022',
-#     'curr': 'CAD'
-# }
-#
-# headers = {
-#     "apikey": API_KEY,
-#     "Content-Type": "application/json"
-# }
-#
-# response = requests.get(url, parameters, headers=headers)
-# response.raise_for_status()
-# data = response.json()
-# print(data)
+    # Reset params
+    location_parameters['term'] = ''
+    new_data['price']['iataCode'] = 1234
+    print("All Destinations Flight Data IATA codes are updated")
+
+
+
+
+
+
+
