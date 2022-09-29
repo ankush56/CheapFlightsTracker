@@ -13,18 +13,28 @@ class DataManager:
         auth = ()
         data = None
         endpoint_url = None
+        headers = None
+        get_with_params = False
         for key, value in kwargs.items():
             if key == 'json':
                 sheet_inputs = value
             if key == 'auth':
                 auth = value
+            if key == 'parameters':
+                parameters = value
+                get_with_params = True
             if key == 'endpoint':
                 endpoint_url = self.sheet_url + "/" + str(value)
         if action_type == 'GET':
             # Get Sheet data
-            response = requests.get(self.sheet_url)
-            response.raise_for_status()
-            data = response.json()
+            if get_with_params:
+                response = requests.get(self.sheet_url, parameters, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+            else:
+                response = requests.get(self.sheet_url)
+                response.raise_for_status()
+                data = response.json()
             return data
         elif action_type == 'POST':
             # Check if entry there already in spreadsheet
