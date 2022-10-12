@@ -9,6 +9,7 @@ from data_manager import DataManager
 from pprint import pprint
 from flight_data import FlightData
 from flight_search import FlightSearch
+from flight_code_finder import FlightCodeFinder
 
 load_dotenv()
 
@@ -22,6 +23,7 @@ sheet1 = DataManager(SHEET_URL)
 #flight_search = DataManager(url)
 flight_data = FlightData()
 flight_search = FlightSearch()
+flight_code_finder = FlightCodeFinder()
 
 URL = "https://api.tequila.kiwi.com/v2/search"
 API_KEY = os.environ.get('API_KEY')
@@ -94,27 +96,44 @@ flight_search_parameters = {
     'curr': 'CAD'
 }
 
+flight_code_search_params = {
+    "iata_code": ""
+}
+
 
 for city in data['prices']:
     flight_search_parameters['fly_to'] = city['iataCode']
     # Check minimum price
     response_data = flight_search.search_flight_data(flight_search_parameters, headers)
-    current_min_price = None
+    # print(f"Printing response data for: {city['iataCode']}")
+    # print(response_data)
+    current_min_price = 0
     counter = 0
-    flight_response_list = {}
-    destination_city = None
+    flight_response_list = []
+    flight_data = None
+    min_price_airlines = []
+    # Check minimum price
     for x in response_data['data']:
         if counter == 0:
             current_min_price = x['price']
+            min_price_airlines = x['airlines']
         if current_min_price > x['price']:
             current_min_price = x['price']
+            min_price_airlines = x['airlines']
         counter = counter + 1
-        destination_city = x['cityTo']
 
-    flight_response_list[destination_city] = current_min_price
+
+    # Find airline name
+    for z in min_price_airlines:
+        flight_code_search_params["iata_code"] = z
+        airline_name = flight_code_finder.find_flight_code(flight_code_search_params)
+        all_flights = []
+        all_flights.append(airline_name)
+
+    flight_data = (x['cityTo'], current_min_price, {'Flights': all_flights})
+    flight_response_list.append(flight_data)
     print(f"{flight_response_list}")
-###########
-
+    # Find Flight airline name
 
 
 
