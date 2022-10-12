@@ -1,15 +1,14 @@
 # This file will need to use the DataManager,FlightSearch, FlightData, NotificationManager classes to achieve the program requirements.
 
 
-import requests
 import os
-from twilio.rest import Client
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from data_manager import DataManager
-from pprint import pprint
 from flight_data import FlightData
 from flight_search import FlightSearch
 from flight_code_finder import FlightCodeFinder
+
 
 load_dotenv()
 
@@ -44,21 +43,6 @@ sheet_input = {
 }
 
 
-# Add destination to sheet data
-# Check if entry there if not there then only add
-# data = sheet1.sheet_action('GET')
-# print(f"data is {data}")
-# print(f"sheet input is {sheet_input['price']['city']}")
-#
-# sheet1.sheet_action('POST', json=sheet_input, auth=auth)
-
-#Update all IATA code to testing
-# data = sheet1.sheet_action('GET')
-# for x in data['prices']:
-#     print(f"id is {x['id']}")
-#     sheet1.sheet_action('PUT', json=new_data, auth=auth, endpoint=x['id'])
-
-
 
 location_parameters = {
     'term': '',
@@ -87,12 +71,20 @@ for x in data['prices']:
         print("All Destinations Flight Data IATA codes are updated")
 
 
-# Get Flights Data
+
+# Get Tomorrow and 6 months from tomorrow date
+tomorrow = datetime.now() + timedelta(days=1)
+six_month_from_today = datetime.now() + timedelta(days=(6 * 30))
+
+# Format date to this format as API takes this in param -  using strftime - 12/31/18
+custom_format_tomorrow = tomorrow.strftime("%d") + "/" + tomorrow.strftime("%m") + "/" + tomorrow.strftime("%Y")
+custom_format_six_month = six_month_from_today.strftime("%d") + "/" + six_month_from_today.strftime("%m") + "/" + six_month_from_today.strftime("%Y")
+
 flight_search_parameters = {
     'fly_from':'YYZ',
     'fly_to': 'YVR',
-    'dateFrom': '01/11/2022',
-    'dateTo': '04/11/2022',
+    'dateFrom': str(custom_format_tomorrow) ,
+    'dateTo': str(custom_format_six_month),
     'curr': 'CAD'
 }
 
@@ -105,8 +97,6 @@ for city in data['prices']:
     flight_search_parameters['fly_to'] = city['iataCode']
     # Check minimum price
     response_data = flight_search.search_flight_data(flight_search_parameters, headers)
-    # print(f"Printing response data for: {city['iataCode']}")
-    # print(response_data)
     current_min_price = 0
     counter = 0
     flight_response_list = []
@@ -117,9 +107,11 @@ for city in data['prices']:
         if counter == 0:
             current_min_price = x['price']
             min_price_airlines = x['airlines']
+            flight_date = x['utc_departure']
         if current_min_price > x['price']:
             current_min_price = x['price']
             min_price_airlines = x['airlines']
+            flight_date = x['utc_departure']
         counter = counter + 1
 
 
@@ -130,7 +122,8 @@ for city in data['prices']:
         all_flights = []
         all_flights.append(airline_name)
 
-    flight_data = (x['cityTo'], current_min_price, {'Flights': all_flights})
+    formatted_flight_date = flight_date.split("T")
+    flight_data = (x['cityTo'], current_min_price, {'Flights': all_flights}, {'Date': formatted_flight_date[0]})
     flight_response_list.append(flight_data)
     print(f"{flight_response_list}")
     # Find Flight airline name
