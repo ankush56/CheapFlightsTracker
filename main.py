@@ -70,8 +70,6 @@ for x in data['prices']:
         new_data['price']['iataCode'] = 1234
         print("All Destinations Flight Data IATA codes are updated")
 
-
-
 # Get Tomorrow and 6 months from tomorrow date
 tomorrow = datetime.now() + timedelta(days=1)
 six_month_from_today = datetime.now() + timedelta(days=(6 * 30))
@@ -92,41 +90,46 @@ flight_code_search_params = {
     "iata_code": ""
 }
 
+for x in data['prices']:
+    if x['origin'] == '':
+        pass
+    else:
+        flight_search_parameters['fly_from'] = x['origin']
+        print(f"---------Cheapest flights from Origin FLY-FROM: {flight_search_parameters['fly_from']}------------")
+        for city in data['prices']:
+            flight_search_parameters['fly_to'] = city['iataCode']
+            # Check minimum price
+            response_data = flight_search.search_flight_data(flight_search_parameters, headers)
+            current_min_price = 0
+            counter = 0
+            flight_response_list = []
+            flight_data = None
+            min_price_airlines = []
+            # Check minimum price
+            for x in response_data['data']:
+                if counter == 0:
+                    current_min_price = x['price']
+                    min_price_airlines = x['airlines']
+                    flight_date = x['utc_departure']
+                if current_min_price > x['price']:
+                    current_min_price = x['price']
+                    min_price_airlines = x['airlines']
+                    flight_date = x['utc_departure']
+                counter = counter + 1
 
-for city in data['prices']:
-    flight_search_parameters['fly_to'] = city['iataCode']
-    # Check minimum price
-    response_data = flight_search.search_flight_data(flight_search_parameters, headers)
-    current_min_price = 0
-    counter = 0
-    flight_response_list = []
-    flight_data = None
-    min_price_airlines = []
-    # Check minimum price
-    for x in response_data['data']:
-        if counter == 0:
-            current_min_price = x['price']
-            min_price_airlines = x['airlines']
-            flight_date = x['utc_departure']
-        if current_min_price > x['price']:
-            current_min_price = x['price']
-            min_price_airlines = x['airlines']
-            flight_date = x['utc_departure']
-        counter = counter + 1
 
+            # Find airline name
+            for z in min_price_airlines:
+                flight_code_search_params["iata_code"] = z
+                airline_name = flight_code_finder.find_flight_code(flight_code_search_params)
+                all_flights = []
+                all_flights.append(airline_name)
 
-    # Find airline name
-    for z in min_price_airlines:
-        flight_code_search_params["iata_code"] = z
-        airline_name = flight_code_finder.find_flight_code(flight_code_search_params)
-        all_flights = []
-        all_flights.append(airline_name)
-
-    formatted_flight_date = flight_date.split("T")
-    flight_data = (x['cityTo'], current_min_price, {'Flights': all_flights}, {'Date': formatted_flight_date[0]})
-    flight_response_list.append(flight_data)
-    print(f"{flight_response_list}")
-    # Find Flight airline name
+            formatted_flight_date = flight_date.split("T")
+            flight_data = (x['cityTo'], current_min_price, {'Flights': all_flights}, {'Date': formatted_flight_date[0]})
+            flight_response_list.append(flight_data)
+            print(f"{flight_response_list}")
+            # Find Flight airline name
 
 
 
